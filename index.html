@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#10182b">
+<title>Тренажёр ФИО и должностей</title>
+<style>
+:root {
+  --bg: #0c1425;
+  --bg-soft: #131d34;
+  --panel: rgba(18, 27, 46, 0.92);
+  --panel-2: rgba(22, 33, 58, 0.92);
+  --line: rgba(148,163,184,.14);
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --muted-2: #cbd5e1;
+  --accent: #6366f1;
+  --accent-2: #8b5cf6;
+  --good: #22c55e;
+  --bad: #ef4444;
+  --warn: #f59e0b;
+  --shadow: 0 18px 40px rgba(2,6,23,.24);
+}
+body.light {
+  --bg: #eef3ff;
+  --bg-soft: #dfe7ff;
+  --panel: rgba(255,255,255,0.88);
+  --panel-2: rgba(248,250,255,0.92);
+  --line: rgba(99,102,241,.14);
+  --text: #13203b;
+  --muted: #5b6b88;
+  --muted-2: #334155;
+  --accent: #4f46e5;
+  --accent-2: #7c3aed;
+  --good: #16a34a;
+  --bad: #dc2626;
+  --warn: #d97706;
+  --shadow: 0 18px 40px rgba(30,41,59,.12);
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; }
+body {
+  font-family: Inter, "Segoe UI", "SF Pro Display", Arial, sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(99,102,241,.22), transparent 30%),
+    radial-gradient(circle at top right, rgba(139,92,246,.18), transparent 28%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+  color: var(--text);
+  min-height:100vh;
+  overflow-y:auto;
+  padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
+}
+.app { max-width: 760px; margin: 0 auto; min-height: 100%; display:flex; flex-direction:column; gap:14px; }
+.topbar { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.icon-btn, .back-btn {
+  width:46px; height:46px; border:none; border-radius:14px; cursor:pointer;
+  background: rgba(255,255,255,.08); color: var(--text); font-size:20px;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid var(--line);
+}
+.page-title { flex:1; text-align:center; color:var(--muted); font-size:14px; font-weight:700; }
+.hero, .card, .panel {
+  background: var(--panel);
+  border:1px solid var(--line);
+  border-radius: 26px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+.hero { padding: 24px; overflow:hidden; position:relative; }
+.hero::before {
+  content:""; position:absolute; inset:0;
+  background: radial-gradient(circle at 0 0, rgba(99,102,241,.14), transparent 26%),
+              radial-gradient(circle at 100% 0, rgba(139,92,246,.12), transparent 24%);
+  pointer-events:none;
+}
+.logo-wrap { display:flex; justify-content:center; margin-bottom:14px; }
+.logo-wrap img { width: 120px; max-width: 36vw; height:auto; filter: drop-shadow(0 12px 24px rgba(0,0,0,.22)); }
+.hero h1 { font-size: 34px; line-height:1.1; letter-spacing:-.03em; text-align:center; margin-bottom:10px; }
+.hero p { color: var(--muted); text-align:center; max-width: 56ch; margin: 0 auto; line-height:1.55; }
+.badge-row, .chip-row, .stats-pills { display:flex; gap:10px; flex-wrap:wrap; }
+.badge, .pill, .group-chip {
+  padding:8px 12px; border-radius:999px; border:1px solid var(--line);
+  background: rgba(255,255,255,.05); color: var(--muted); font-size:13px; font-weight:700;
+}
+.group-grid { display:flex; flex-wrap:wrap; gap:10px; }
+.group-chip {
+  cursor:pointer; color:var(--muted-2);
+}
+.group-chip.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff; border-color:transparent; }
+.section-title { font-size:18px; font-weight:800; margin-bottom:12px; }
+.grid-3 { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px; }
+.stat-card {
+  background: var(--panel-2); border:1px solid var(--line); border-radius:18px; padding:16px; text-align:center;
+}
+.stat-card .num { font-size:30px; font-weight:900; line-height:1; margin-bottom:6px; }
+.stat-card .label { color: var(--muted); font-size:12px; }
+.menu-btn {
+  width:100%; border:none; border-radius:20px; padding:18px; cursor:pointer; text-align:left;
+  display:flex; gap:14px; align-items:center; background: var(--panel-2); color: var(--text);
+  border:1px solid var(--line); box-shadow: var(--shadow);
+}
+.menu-btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color:transparent; }
+.menu-btn .emoji { font-size:26px; width:36px; text-align:center; }
+.menu-btn .title { font-size:16px; font-weight:800; }
+.menu-btn .sub { font-size:12px; color: var(--muted); margin-top:4px; line-height:1.45; }
+.menu-btn.primary .sub { color: rgba(255,255,255,.78); }
+.filters { display:grid; gap:12px; }
+.mode-selector, .difficulty-selector {
+  display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:8px; background: rgba(255,255,255,.04); padding:6px; border-radius:18px;
+}
+.mode-btn, .difficulty-btn {
+  border:none; padding:12px 10px; border-radius:14px; cursor:pointer; background:transparent; color:var(--muted); font-weight:800; font-size:12px;
+}
+.mode-btn.active, .difficulty-btn.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff; }
+.row { display:flex; gap:10px; flex-wrap:wrap; }
+.row > * { flex:1; }
+.card { padding:22px; }
+.phase-dots { display:flex; justify-content:center; gap:8px; }
+.phase-dot { width:10px; height:10px; border-radius:999px; background: rgba(255,255,255,.14); }
+.phase-dot.active { background: var(--accent); box-shadow: 0 0 16px rgba(99,102,241,.45); }
+.phase-dot.done { background: var(--good); }
+.phase-label { text-align:center; color: var(--muted); font-size:13px; font-weight:700; }
+.progress { height:8px; border-radius:999px; overflow:hidden; background: rgba(255,255,255,.08); }
+.progress > div { height:100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius:999px; transition: width .25s ease; }
+.question-label { display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border-radius:999px; background: rgba(255,255,255,.05); border:1px solid var(--line); color:var(--muted); font-size:12px; font-weight:800; margin-bottom:14px; }
+.question { font-size: 31px; line-height:1.28; letter-spacing:-.02em; font-weight:900; word-break:break-word; }
+.question.small { font-size:25px; }
+.answer-preview {
+  margin-top:16px; padding:14px 16px; border-radius:18px; background: rgba(99,102,241,.1); border:1px solid rgba(99,102,241,.18); color:#c7d2fe;
+  font-size:18px; font-weight:700; line-height:1.45;
+}
+.input {
+  width:100%; border-radius:16px; border:2px solid rgba(148,163,184,.2); background: rgba(8,15,30,.55); color:var(--text);
+  padding:16px 18px; font-size:17px; outline:none;
+}
+body.light .input { background: rgba(255,255,255,.9); }
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(99,102,241,.12); }
+.input.correct { border-color: var(--good); background: rgba(34,197,94,.08); }
+.input.wrong { border-color: var(--bad); background: rgba(239,68,68,.08); }
+.btn {
+  border:none; cursor:pointer; border-radius:16px; min-height:52px; padding:14px 18px; font-size:15px; font-weight:800;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff; }
+.btn.secondary { background: var(--panel-2); color: var(--text); border:1px solid var(--line); }
+.btn.good { background: linear-gradient(135deg, #16a34a, #22c55e); color:#fff; }
+.btn.bad { background: linear-gradient(135deg, #dc2626, #ef4444); color:#fff; }
+.btn.warn { background: linear-gradient(135deg, #d97706, #f59e0b); color:#fff; }
+.options { display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:10px; }
+.option-btn {
+  border:2px solid rgba(148,163,184,.18); background: rgba(8,15,30,.45); color:var(--text); border-radius:18px; min-height:74px; padding:16px; cursor:pointer;
+  text-align:left; font-size:14px; line-height:1.45; font-weight:700;
+}
+body.light .option-btn { background: rgba(255,255,255,.78); }
+.option-btn.correct { border-color: var(--good); background: rgba(34,197,94,.12); }
+.option-btn.wrong { border-color: var(--bad); background: rgba(239,68,68,.12); }
+.feedback { text-align:center; }
+.feedback-title { font-size:22px; font-weight:900; margin-bottom:6px; }
+.feedback-title.good { color: var(--good); }
+.feedback-title.bad { color: var(--bad); }
+.directory-list, .stats-list { display:flex; flex-direction:column; gap:10px; }
+.list-item {
+  padding:16px; border-radius:18px; border:1px solid var(--line); background: var(--panel-2);
+}
+.list-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.list-name { font-size:16px; font-weight:900; line-height:1.35; }
+.list-position { color: var(--muted); font-size:14px; line-height:1.45; margin-top:5px; }
+.list-group { margin-top:8px; font-size:12px; color: var(--muted); }
+.star-btn {
+  width:36px; height:36px; min-width:36px; border-radius:12px; border:1px solid var(--line); background: rgba(255,255,255,.05); color:#fbbf24; cursor:pointer;
+}
+.muted { color: var(--muted); }
+.tiny { font-size:12px; }
+.footer { margin-top:auto; padding:8px 0 2px; text-align:center; color:var(--muted); font-size:13px; }
+.footer span { display:inline-block; padding:10px 14px; border-radius:999px; border:1px solid var(--line); background: rgba(255,255,255,.05); }
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  min-width: 100px;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.05);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: var(--shadow);
+}
+.avatar.small { width:76px; height:76px; min-width:76px; border-radius:18px; }
+.avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+.avatar.clickable { cursor: zoom-in; transition: transform .18s ease, box-shadow .18s ease; }
+.avatar.clickable:hover { transform: scale(1.03); }
+.avatar.clickable:active { transform: scale(.98); }
+.photo-modal { position:fixed; inset:0; z-index:1400; background: rgba(2,6,23,.86); display:flex; align-items:center; justify-content:center; padding:20px; }
+.photo-modal.hidden { display:none !important; }
+.photo-modal-card { width:100%; max-width:min(92vw, 760px); background: var(--panel); border:1px solid var(--line); border-radius:24px; box-shadow: var(--shadow); overflow:hidden; }
+.photo-modal-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); }
+.photo-modal-title { font-size:16px; font-weight:900; line-height:1.35; }
+.photo-modal-sub { color: var(--muted); font-size:13px; line-height:1.45; margin-top:4px; }
+.photo-modal-close { width:42px; height:42px; min-width:42px; border-radius:14px; border:1px solid var(--line); background: rgba(255,255,255,.05); color: var(--text); cursor:pointer; font-size:18px; }
+.photo-modal-image-wrap { display:flex; align-items:center; justify-content:center; padding:16px; background: rgba(255,255,255,.03); }
+.photo-modal-image { max-width:100%; max-height:72vh; width:auto; height:auto; display:block; border-radius:20px; object-fit:contain; }
+.avatar-fallback {
+  width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+  background: linear-gradient(135deg, rgba(99,102,241,.22), rgba(139,92,246,.22));
+  color: var(--text); font-weight:900; font-size:20px; text-transform:uppercase;
+}
+.person-head { display:flex; gap:16px; align-items:flex-start; }
+.person-head-main { flex:1; min-width:0; }
+.alias-line { margin-top:8px; color: var(--muted); font-size:13px; line-height:1.45; }
+.kbd-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.kbd {
+  display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:28px; padding:0 8px;
+  border-radius:10px; background: rgba(255,255,255,.06); border:1px solid var(--line); color: var(--muted-2); font-size:12px; font-weight:800;
+}
+.photo-guide code {
+  display:block; margin-top:6px; padding:10px 12px; border-radius:12px; background: rgba(255,255,255,.05); border:1px solid var(--line); color: var(--muted-2);
+  font-size:12px; overflow-wrap:anywhere;
+}
+
+.settings-grid { display:grid; gap:14px; }
+.flashcard {
+  min-height: 280px; perspective: 1200px;
+}
+.flashcard-inner {
+  position: relative; width:100%; min-height:280px; transform-style: preserve-3d; transition: transform .55s ease;
+}
+.flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+.flash-side {
+  position:absolute; inset:0; padding:22px; border-radius:24px; backface-visibility:hidden; background: var(--panel); border:1px solid var(--line); box-shadow: var(--shadow);
+  display:flex; flex-direction:column; justify-content:center;
+}
+.flash-side.back { transform: rotateY(180deg); }
+.search-wrap { display:grid; gap:12px; }
+.notice {
+  padding:14px 16px; border-radius:18px; border:1px solid var(--line); background: rgba(245,158,11,.1); color: #fde68a; font-size:14px; line-height:1.5;
+}
+.toast {
+  position: fixed; left:50%; bottom: 18px; transform: translateX(-50%); z-index:999; background: rgba(15,23,42,.94); color:#fff; border:1px solid var(--line);
+  padding:12px 16px; border-radius:14px; box-shadow: var(--shadow); font-size:14px; max-width:min(92vw, 520px);
+}
+.hidden { display:none !important; }
+@media (max-width: 720px) {
+  .grid-3 { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .options { grid-template-columns: 1fr; }
+  .mode-selector, .difficulty-selector { grid-template-columns: 1fr; }
+  .question { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="toast hidden" id="toast"></div>
+<div class="photo-modal hidden" id="photo-modal" onclick="closePhotoModal(event)">
+  <div class="photo-modal-card">
+    <div class="photo-modal-head">
+      <div>
+        <div class="photo-modal-title" id="photo-modal-title"></div>
+        <div class="photo-modal-sub" id="photo-modal-sub"></div>
+      </div>
+      <button class="photo-modal-close" onclick="closePhotoModal(event)">✕</button>
+    </div>
+    <div class="photo-modal-image-wrap">
+      <img class="photo-modal-image" id="photo-modal-image" alt="Фото">
+    </div>
+  </div>
+</div>
+<script>
+const APP_VERSION = "4.0";
+const STORAGE_KEYS = {
+  settings: "delta-trainer-settings-v4",
+  profile: "delta-trainer-profile-v4",
+  session: "delta-trainer-session-v4"
+};
+const LOGO_SRC = "assets/logo-delta.png"
+const PEOPLE = [
+  {"name": "Киселев Михаил Сергеевич", "position": "Председатель Наблюдательного совета", "group": "Центральный штаб", "photo": "assets/people/kiselev-mihail-sergeevich.png"},
+  {"name": "Дрожжина Юлия Николаевна", "position": "Председатель Правления", "group": "Центральный штаб", "photo": "assets/people/1.png"},
+  {"name": "Зубащенко Ярослав Викторович", "position": "Командир Центрального штаба", "group": "Центральный штаб", "photo": "assets/people/2.png"},
+  {"name": "Позднякова Юлия Евгеньевна", "position": "Комиссар Центрального штаба", "group": "Центральный штаб", "photo": "assets/people/3.png"},
+  {"name": "Комарова Полина Евгеньевна", "position": "Руководитель СПО Центрального штаба", "group": "Центральный штаб", "photo": "assets/people/4.png"},
+  {"name": "Нагин Алексей Владимирович", "position": "Командир Окружного штаба ПФО", "group": "Окружной штаб ПФО", "photo": "assets/people/5.png"},
+  {"name": "Уколов Роман Александрович", "position": "Председатель Центральной Контрольной Ревизионной комиссии", "group": "Центральный штаб", "photo": "assets/people/6.png"},
+  {"name": "Сиразиева Таисия Николаевна", "position": "Специалист Казанского штаба СО", "group": "Казанский штаб", "photo": "assets/people/7.png"},
+  {"name": "Никитин Никита Николаевич", "position": "Специалист Казанского штаба СО", "group": "Казанский штаб", "photo": "assets/people/8.png"},
+  {"name": "Чурикова Юлия Григорьевна", "position": "Руководитель амбассадоров Казанского штаба СО", "group": "Казанский штаб", "photo": "assets/people/9.png"},
+  {"name": "Гришин Сархан Фарманович", "position": "Комиссар Окружного штаба ПФО", "group": "Окружной штаб ПФО", "photo": "assets/people/10.png"},
+  {"name": "Ефимов Евгений Петрович", "position": "Председатель Правления ТРО", "group": "ТРО", "photo": "assets/people/11.png"},
+  {"name": "Ислаев Василий Филиппович", "position": "Заместитель председателя Наблюдательного совета ТРО, директор ГБУ «РЦ “СТО”»", "group": "ТРО", "photo": "assets/people/12.png"},
+  {"name": "Гайнуллина Алия Нафисовна", "position": "Заместитель директора ГБУ «РЦ “СТО”»", "group": "ТРО", "photo": "assets/people/13.png"},
+  {"name": "Исламгулова Дарья Ильдаровна", "position": "Заместитель директора ГБУ «РЦ “СТО”»", "group": "ТРО", "photo": "assets/people/14.png"},
+  {"name": "Латипова Сюмбель Кабировна", "position": "Руководитель (командир) ТРО", "group": "ТРО", "photo": "assets/people/15.png"},
+  {"name": "Гильмиярова Екатерина Игоревна", "position": "Комиссар ТРО", "group": "ТРО", "photo": "assets/people/16.png"},
+  {"name": "Романова Дарья Андреевна", "position": "Специалист Казанского штаба СО", "group": "Казанский штаб", "photo": "assets/people/17.png"},
+  {"name": "Рамазанова Алина Маратовна", "position": "И.о. руководителя СПО РТ", "group": "ТРО", "photo": "assets/people/18.png"},
+  {"name": "Рамазанова Наиля Талгатовна", "position": "Пресс-секретарь Казанского штаба СО", "group": "Казанский штаб", "photo": "assets/people/19.png"},
+  {"name": "Хаертдинова Милана Марселевна", "position": "Заместитель пресс-секретаря Казанского штаба СО", "group": "Казанский штаб", "photo": "assets/people/20.png"},
+  {"name": "Абржина Алина Александровна", "position": "Руководитель научного направления ТРО", "group": "ТРО", "photo": "assets/people/21.png"},
+  {"name": "Акбердин Наиль Гильфанович", "position": "Руководитель проектного центра РТ", "group": "ТРО", "photo": "assets/people/22.png"},
+  {"name": "Васильева Надежда Викторовна", "position": "Руководитель информационно-аналитического отдела СО РТ", "group": "ТРО", "photo": "assets/people/23.png"},
+  {"name": "Дедюхина Ангелина Антоновна", "position": "Руководитель PR Регионального штаба", "group": "Региональный штаб", "photo": "assets/people/24.png"},
+  {"name": "Козерук Полина Юрьевна", "position": "Специалист Регионального штаба", "group": "Региональный штаб", "photo": "assets/people/25.png"},
+  {"name": "Арсланова Алина Руслановна", "position": "Заместитель руководителя проектного центра Регионального штаба", "group": "Региональный штаб", "photo": "assets/people/26.png"},
+  {"name": "Тронина Софья Александровна", "position": "Руководитель духовно-нравственного воспитания молодежи в рамках СО РТ", "group": "ТРО", "photo": "assets/people/27.png"},
+  {"name": "Фатыхова Дамира Ильфатовна", "position": "Специалист проф. обучения СО РТ", "group": "ТРО", "photo": "assets/people/28.png"},
+  {"name": "Ахманов Александр Радикович", "position": "И.о. командира Казанского штаба СО", "group": "Казанский штаб", "photo": "assets/people/29.png"},
+  {"name": "Хуснутдинова Алия Алмазовна", "position": "Специалист Казанского штаба СО", "group": "Казанский штаб", "photo": "assets/people/30.png"},
+  {"name": "Астафьев Даниил Юрьевич", "position": "Командир Штаба СО КГЭУ «Тесла»", "group": "Штаб СО КГЭУ «Тесла»", "photo": "assets/people/31.png"},
+  {"name": "Шарифуллин Альфред Маратович", "position": "Комиссар Штаба СО КГЭУ «Тесла»", "group": "Штаб СО КГЭУ «Тесла»", "photo": "assets/people/32.png"},
+  {"name": "Остапенко Юлия Алексеевна", "position": "Мастер-методист Штаба СО КГЭУ «Тесла»", "group": "Штаб СО КГЭУ «Тесла»", "photo": "assets/people/33.png"},
+  {"name": "Шархимуллин Максим Олегович", "position": "Мастер-методист Штаба СО КГЭУ «Тесла»", "group": "Штаб СО КГЭУ «Тесла»", "photo": "assets/people/34.png"},
+  {"name": "Соловьев Никита Андреевич", "position": "Руководитель строительного направления Штаба СО КГЭУ «Тесла»", "group": "Штаб СО КГЭУ «Тесла»", "photo": "assets/people/35.png"},
+  {"name": "Аксенов Арсений Александрович", "position": "Пресс-секретарь Штаба СО КГЭУ «Тесла»", "group": "Штаб СО КГЭУ «Тесла»", "photo": "assets/people/36.png"},
+  {"name": "Баранова Карина Геннадьевна", "position": "Заместитель пресс-секретаря Штаба СО КГЭУ «Тесла»", "group": "Штаб СО КГЭУ «Тесла»", "photo": "assets/people/37.png"},
+  {"name": "Хазиев Артём Владиславович", "position": "Руководитель проектного центра Штаба СО КГЭУ «Тесла»", "group": "Штаб СО КГЭУ «Тесла»", "photo": "assets/people/38.png"},
+  {"name": "Назмиев Карим Ильдарович", "position": "Командир СПО «Дельта»", "group": "СПО «Дельта»", "photo": "assets/people/39.png"},
+  {"name": "Царегородцева Александра Владимировна", "position": "Комиссар СПО «Дельта»", "group": "СПО «Дельта»", "photo": "assets/people/40.png"},
+  {"name": "Гурбанов Тимур Тагандурдыевич", "position": "Мастер СПО «Дельта»", "group": "СПО «Дельта»", "photo": "assets/people/41.png"},
+  {"name": "Аглямов Айнур Римович", "position": "Методист СПО «Дельта»", "group": "СПО «Дельта»", "photo": "assets/people/42.png"},
+  {"name": "Виноградова Кристина Александровна", "position": "Пресс-секретарь СПО «Дельта»", "group": "СПО «Дельта»", "photo": "assets/people/43.png"},
+  {"name": "Барсукова Маргарита Владимировна", "position": "Руководитель Аппарата Центрального штаба", "group": "Центральный штаб", "photo": "assets/people/44.png"},
+  {"name": "Стома Алина Андреевна", "position": "И.о руководителя отдела регионального взаимодействия и развития МООО «РСО»", "group": "Центральный штаб", "photo": "assets/people/45.png"}
+];
+
+function safeGet(key, fallback = null) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) { return fallback; }
+}
+function safeSet(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
+}
+function safeRemove(key) {
+  try { localStorage.removeItem(key); } catch (e) {}
+}
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+function normalizeText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/ё/g, "е")
+    .replace(/[«»"']/g, "")
+    .replace(/[()]/g, " ")
+    .replace(/[.,:;!?]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+function shuffle(array) {
+  const copy = [...array];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+function sample(array, n) {
+  return shuffle(array).slice(0, n);
+}
+function vibrate(pattern = 8) { if (navigator.vibrate) navigator.vibrate(pattern); }
+function toast(text) {
+  const el = document.getElementById("toast");
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove("hidden");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => el.classList.add("hidden"), 2200);
+}
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  const dp = Array.from({ length: n + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= m; j++) dp[0][j] = j;
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + (b[i - 1] === a[j - 1] ? 0 : 1)
+      );
+    }
+  }
+  return dp[n][m];
+}
+function checkAnswer(input, correct) {
+  const a = normalizeText(input);
+  const b = normalizeText(correct);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const maxDistance = b.length > 40 ? 3 : b.length > 20 ? 2 : 1;
+  return levenshtein(a, b) <= maxDistance;
+}
+function formatTime(ms) {
+  const sec = Math.floor(ms / 1000);
+  const min = Math.floor(sec / 60);
+  const rest = sec % 60;
+  return min > 0 ? `${min} мин ${rest} сек` : `${rest} сек`;
+}
+function getSurname(fullName) {
+  return String(fullName || "").trim().split(/\s+/)[0] || fullName;
+}
+function shortHint(text) {
+  const words = String(text).split(/\s+/).filter(Boolean);
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase() + "…";
+  return words.slice(0, 2).map(w => w.charAt(0).toUpperCase() + "…").join(" ");
+}
+function fioHint(fullName) {
+  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  return parts.slice(0,3).map(p => (p[0] || "").toUpperCase() + ".").join(" ");
+}
+function getTodayKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+}
+function surnameInitial(idx) {
+  const surname = getSurname(PEOPLE[idx]?.name || "");
+  return surname ? surname.charAt(0).toUpperCase() + "." : "";
+}
+function duplicatePositionIndexes(position) {
+  const norm = normalizeText(position);
+  return PEOPLE.map((p, i) => normalizeText(p.position) === norm ? i : -1).filter(i => i >= 0);
+}
+function hasDuplicatePosition(idx) {
+  return duplicatePositionIndexes(PEOPLE[idx]?.position || "").length > 1;
+}
+function positionWithMarker(idx) {
+  const person = PEOPLE[idx];
+  if (!person) return "";
+  return hasDuplicatePosition(idx) ? `${person.position} (${surnameInitial(idx)})` : person.position;
+}
+function displayValueByMode(idx, mode) {
+  return mode === "name-to-position" ? positionWithMarker(idx) : PEOPLE[idx].name;
+}
+function askLabelWithMarker(idx, mode) {
+  return mode === "name-to-position" ? PEOPLE[idx].name : positionWithMarker(idx);
+}
+function answerHint(answer, mode) {
+  return mode === "position-to-name" ? fioHint(answer) : shortHint(answer);
+}
+function avatarInitials(name) {
+  const parts = String(name || "").split(/\s+/).filter(Boolean);
+  return parts.slice(0,2).map(p => p[0]).join("").toUpperCase() || "?";
+}
+function avatarHtml(idx, size = "normal") {
+  if (!settings.showAvatars) return "";
+  const person = PEOPLE[idx];
+  const cls = size === "small" ? "avatar small" : "avatar";
+  const initials = escapeHtml(avatarInitials(person.name));
+  if (person.photo) {
+    return `<button type="button" class="${cls} clickable" onclick="openPhotoModal(${idx}); event.stopPropagation();"><img src="${escapeHtml(person.photo)}" alt="${escapeHtml(person.name)}" onerror="this.parentNode.outerHTML='<div class=&quot;${cls}&quot;><div class=&quot;avatar-fallback&quot;>${initials}</div></div>'"></button>`;
+  }
+  return `<div class="${cls}"><div class="avatar-fallback">${initials}</div></div>`;
+}
+function openPhotoModal(idx) {
+  const person = PEOPLE[idx];
+  if (!person || !person.photo) return;
+  const modal = document.getElementById("photo-modal");
+  const img = document.getElementById("photo-modal-image");
+  const title = document.getElementById("photo-modal-title");
+  const sub = document.getElementById("photo-modal-sub");
+  if (!modal || !img || !title || !sub) return;
+  title.textContent = person.name;
+  sub.textContent = `${person.group} • ${person.position}`;
+  img.src = person.photo;
+  img.alt = person.name;
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+function closePhotoModal(event) {
+  const modal = document.getElementById("photo-modal");
+  if (!modal) return;
+  if (event && event.target) {
+    const card = modal.querySelector(".photo-modal-card");
+    const closeBtn = event.target.closest && event.target.closest(".photo-modal-close");
+    if (card && card.contains(event.target) && !closeBtn && event.target !== modal) return;
+  }
+  modal.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+function searchInputHtml() {
+  return `<input id="directory-search" class="input" type="text" placeholder="ФИО, фамилия, должность или группа..." value="${escapeHtml(state.search)}" oninput="handleSearchInput(this)" autocomplete="off" spellcheck="false">`;
+}
+function currentChallenge(card, mode) {
+  const idx = PEOPLE.findIndex(p => p.name === card.name && p.position === card.position && p.group === card.group);
+  return mode === "name-to-position"
+    ? { ask: card.name, answer: card.position, chip: "ФИО" }
+    : { ask: idx >= 0 ? positionWithMarker(idx) : card.position, answer: card.name, chip: "Должность" };
+}
+function difficultyPhases(level) {
+  if (level === "easy") return ["choice"];
+  if (level === "medium") return ["choice", "typing"];
+  return ["typing"];
+}
+function buildChoiceOptions(correctIdx, mode, poolIndexes) {
+  const answerField = mode === "name-to-position" ? "position" : "name";
+  const pool = (poolIndexes || PEOPLE.map((_,i)=>i))
+    .map(index => ({ index, value: PEOPLE[index][answerField] }))
+    .filter(item => item.index !== correctIdx && normalizeText(item.value) !== normalizeText(PEOPLE[correctIdx][answerField]));
+  const options = [correctIdx, ...sample(pool, 3).map(x => x.index)];
+  while (options.length < 4) {
+    const any = Math.floor(Math.random() * PEOPLE.length);
+    if (!options.includes(any) && normalizeText(PEOPLE[any][answerField]) !== normalizeText(PEOPLE[correctIdx][answerField])) options.push(any);
+  }
+  return shuffle(options);
+}
+const defaultSettings = {
+  theme: "dark",
+  mode: "name-to-position",
+  difficulty: "medium",
+  groups: ["Центральный штаб", "Окружной штаб ПФО", "Казанский штаб", "Региональный штаб", "ТРО", "Штаб СО КГЭУ «Тесла»", "СПО «Дельта»"],
+  useAnimations: true,
+  showAvatars: true
+};
+const defaultProfile = {
+  createdAt: Date.now(),
+  siteOpenCount: 0,
+  sessionsCompleted: 0,
+  favorites: {},
+  personStats: {},
+  categoriesOpened: {},
+  maxStreak: 0,
+  totalCorrect: 0,
+  totalWrong: 0,
+  totalSkipped: 0,
+  totalStudyTime: 0,
+  todayMistakes: {},
+  savedRuns: 0
+};
+let settings = { ...defaultSettings, ...(safeGet(STORAGE_KEYS.settings, {}) || {}) };
+let profile = { ...defaultProfile, ...(safeGet(STORAGE_KEYS.profile, {}) || {}) };
+profile.siteOpenCount = (profile.siteOpenCount || 0) + 1;
+safeSet(STORAGE_KEYS.profile, profile);
+document.body.classList.toggle("light", settings.theme === "light");
+
+function getPersonStat(idx) {
+  const id = String(idx);
+  if (!profile.personStats[id]) {
+    profile.personStats[id] = { correct:0, wrong:0, seen:0, skipped:0, known:0, difficultScore:0, lastSeen:0 };
+  }
+  return profile.personStats[id];
+}
+function updatePersonStat(idx, patch) {
+  const stat = getPersonStat(idx);
+  Object.assign(stat, patch);
+  stat.lastSeen = Date.now();
+  safeSet(STORAGE_KEYS.profile, profile);
+}
+function markFavorite(idx) {
+  const id = String(idx);
+  profile.favorites[id] = !profile.favorites[id];
+  safeSet(STORAGE_KEYS.profile, profile);
+  render();
+}
+function isFavorite(idx) {
+  return !!profile.favorites[String(idx)];
+}
+function recordOutcome(idx, kind, phase) {
+  const stat = getPersonStat(idx);
+  stat.seen += 1;
+  if (kind === "correct") {
+    stat.correct += 1;
+    stat.difficultScore = Math.max(0, stat.difficultScore - 1);
+    profile.totalCorrect += 1;
+  } else if (kind === "wrong") {
+    stat.wrong += 1;
+    stat.difficultScore += 3;
+    profile.totalWrong += 1;
+    const today = getTodayKey();
+    if (!profile.todayMistakes[today]) profile.todayMistakes[today] = {};
+    profile.todayMistakes[today][String(idx)] = (profile.todayMistakes[today][String(idx)] || 0) + 1;
+  } else if (kind === "skip") {
+    stat.skipped += 1;
+    stat.difficultScore += 2;
+    profile.totalSkipped += 1;
+  } else if (kind === "known") {
+    stat.known += 1;
+  }
+  stat.lastPhase = phase || stat.lastPhase;
+  stat.lastSeen = Date.now();
+  safeSet(STORAGE_KEYS.profile, profile);
+}
+function datasetIndexesByGroups(groups) {
+  return PEOPLE.map((p, i) => groups.includes(p.group) ? i : -1).filter(i => i >= 0);
+}
+let state = {
+  screen: "menu",
+  phase: 0,
+  phaseName: null,
+  mode: settings.mode,
+  difficulty: settings.difficulty,
+  groups: [...settings.groups],
+  pool: [],
+  known: [],
+  toLearn: [],
+  queue: [],
+  currentIdx: 0,
+  input: "",
+  feedback: null,
+  selectedOption: null,
+  options: [],
+  hintShown: false,
+  startTime: null,
+  stats: { correct:0, wrong:0, skipped:0 },
+  streak: 0,
+  lastResults: null,
+  search: "",
+  flashIndexes: [],
+  flashCurrent: 0,
+  flashFlipped: false,
+  searchTrainIndexes: [],
+  searchCursor: 0,
+  notice: "",
+  phasesFlow: [],
+  currentFlowIndex: 0,
+  currentTrainingLabel: "Общая тренировка"
+};
+function saveSettings() { safeSet(STORAGE_KEYS.settings, settings); document.body.classList.toggle("light", settings.theme === "light"); }
+function saveSession() {
+  if (["menu"].includes(state.screen)) {
+    safeRemove(STORAGE_KEYS.session);
+    return;
+  }
+  safeSet(STORAGE_KEYS.session, state);
+}
+function loadSession() {
+  return safeGet(STORAGE_KEYS.session, null);
+}
+function clearSession() { safeRemove(STORAGE_KEYS.session); }
+function baseReset() {
+  state = {
+    ...state,
+    screen: "menu",
+    phase: 0,
+    phaseName: null,
+    mode: settings.mode,
+    difficulty: settings.difficulty,
+    groups: [...settings.groups],
+    pool: [],
+    known: [],
+    toLearn: [],
+    queue: [],
+    currentIdx: 0,
+    input: "",
+    feedback: null,
+    selectedOption: null,
+    options: [],
+    hintShown: false,
+    startTime: null,
+    stats: { correct:0, wrong:0, skipped:0 },
+    streak: 0,
+    search: "",
+    flashIndexes: [],
+    flashCurrent: 0,
+    flashFlipped: false,
+    searchTrainIndexes: [],
+    notice: "",
+    phasesFlow: [],
+    currentFlowIndex: 0,
+    currentTrainingLabel: "Общая тренировка"
+  };
+}
+function goMenu() {
+  clearSession();
+  baseReset();
+  render();
+}
+function continueSession() {
+  const saved = loadSession();
+  if (!saved) return startTraining();
+  state = saved;
+  render();
+  focusInput();
+}
+function setMode(mode) {
+  settings.mode = mode;
+  state.mode = mode;
+  saveSettings();
+  render();
+}
+function setDifficulty(level) {
+  settings.difficulty = level;
+  state.difficulty = level;
+  saveSettings();
+  render();
+}
+function toggleTheme() {
+  settings.theme = settings.theme === "dark" ? "light" : "dark";
+  saveSettings();
+  render();
+}
+function toggleGroup(group) {
+  const set = new Set(settings.groups);
+  if (set.has(group)) {
+    if (set.size === 1) return toast("Нужна хотя бы одна группа");
+    set.delete(group);
+  } else set.add(group);
+  settings.groups = [...set];
+  state.groups = [...settings.groups];
+  saveSettings();
+  render();
+}
+function allGroups() {
+  return [...new Set(PEOPLE.map(p => p.group))];
+}
+function openDirectory() {
+  state.screen = "directory";
+  render();
+}
+function handleSearchInput(input) {
+  state.search = input.value;
+  state.searchCursor = input.selectionStart || state.search.length;
+  render();
+}
+function openStats() {
+  state.screen = "stats";
+  render();
+}
+function openSettings() {
+  state.screen = "settings";
+  render();
+}
+function openFlashcards(indexes = null, label = "Карточки") {
+  state.flashIndexes = indexes && indexes.length ? indexes : datasetIndexesByGroups(settings.groups);
+  state.flashCurrent = 0;
+  state.flashFlipped = false;
+  state.currentTrainingLabel = label;
+  state.screen = "flashcards";
+  render();
+}
+function startTraining(customIndexes = null, label = "Общая тренировка") {
+  state.mode = settings.mode;
+  state.difficulty = settings.difficulty;
+  state.groups = [...settings.groups];
+  state.currentTrainingLabel = label;
+  state.known = [];
+  state.toLearn = [];
+  state.currentIdx = 0;
+  state.stats = { correct:0, wrong:0, skipped:0 };
+  state.streak = 0;
+  state.startTime = Date.now();
+  state.phasesFlow = difficultyPhases(settings.difficulty);
+  state.currentFlowIndex = 0;
+  state.pool = shuffle((customIndexes && customIndexes.length ? customIndexes : datasetIndexesByGroups(settings.groups)));
+  state.screen = "filter";
+  state.phase = 1;
+  state.phaseName = "filter";
+  state.notice = state.pool.length ? "" : "По выбранным группам пока нет карточек.";
+  render();
+}
+function startQuickPractice() {
+  const indexes = datasetIndexesByGroups(settings.groups);
+  state.mode = settings.mode;
+  state.difficulty = settings.difficulty;
+  state.groups = [...settings.groups];
+  state.currentTrainingLabel = "Быстрая тренировка";
+  state.toLearn = sample(indexes, Math.min(10, indexes.length));
+  state.queue = [...state.toLearn];
+  state.currentIdx = 0;
+  state.stats = { correct:0, wrong:0, skipped:0 };
+  state.streak = 0;
+  state.startTime = Date.now();
+  state.phasesFlow = difficultyPhases(settings.difficulty);
+  state.currentFlowIndex = 0;
+  startFlowPhase();
+}
+function startFavoritesTraining() {
+  const favIdx = Object.keys(profile.favorites).filter(k => profile.favorites[k]).map(Number);
+  if (!favIdx.length) return toast("Пока нет избранных карточек");
+  startTraining(favIdx, "Избранное");
+}
+function startTodayMistakes() {
+  const today = getTodayKey();
+  const source = profile.todayMistakes[today] || {};
+  const indexes = Object.keys(source).map(Number).sort((a,b) => source[b]-source[a]);
+  if (!indexes.length) return toast("Сегодня ошибок пока нет");
+  state.mode = settings.mode;
+  state.difficulty = settings.difficulty;
+  state.groups = [...settings.groups];
+  state.currentTrainingLabel = "Ошибки за сегодня";
+  state.toLearn = indexes;
+  state.queue = [...indexes];
+  state.currentIdx = 0;
+  state.stats = { correct:0, wrong:0, skipped:0 };
+  state.streak = 0;
+  state.startTime = Date.now();
+  state.phasesFlow = difficultyPhases("hard");
+  state.currentFlowIndex = 0;
+  startFlowPhase();
+}
+function startHardestTraining() {
+  const indexes = PEOPLE.map((_, idx) => [idx, getPersonStat(idx).difficultScore || 0]).filter(([,s]) => s > 0).sort((a,b)=>b[1]-a[1]).slice(0, 12).map(x=>x[0]);
+  if (!indexes.length) return toast("Сложных карточек пока нет");
+  state.mode = settings.mode;
+  state.difficulty = "hard";
+  state.currentTrainingLabel = "Самые сложные карточки";
+  state.toLearn = indexes;
+  state.queue = [...indexes];
+  state.currentIdx = 0;
+  state.stats = { correct:0, wrong:0, skipped:0 };
+  state.streak = 0;
+  state.startTime = Date.now();
+  state.phasesFlow = ["typing"];
+  state.currentFlowIndex = 0;
+  startFlowPhase();
+}
+function reshuffleCurrent() {
+  if (state.screen === "filter") {
+    const current = state.pool[state.currentIdx];
+    const rest = shuffle(state.pool.slice(state.currentIdx + 1));
+    state.pool = [...state.pool.slice(0, state.currentIdx + 1), ...rest];
+  } else if (state.queue && state.queue.length) {
+    const current = state.queue[state.currentIdx];
+    const rest = shuffle(state.queue.slice(state.currentIdx + 1));
+    state.queue = [...state.queue.slice(0, state.currentIdx + 1), ...rest];
+    if (state.phaseName === "choice") state.options = buildChoiceOptions(current, state.mode, state.queue);
+  }
+  toast("Порядок перемешан");
+  render();
+}
+function skipFilter() {
+  markKnown("skip");
+}
+function markKnown(action) {
+  const idx = state.pool[state.currentIdx];
+  if (action === true) {
+    state.known.push(idx);
+    recordOutcome(idx, "known", "filter");
+  } else if (action === "skip") {
+    state.stats.skipped += 1;
+    state.toLearn.push(idx);
+    recordOutcome(idx, "skip", "filter");
+  } else {
+    state.toLearn.push(idx);
+  }
+  state.currentIdx += 1;
+  if (state.currentIdx >= state.pool.length) {
+    if (!state.toLearn.length) return showResults();
+    state.queue = shuffle([...state.toLearn]);
+    state.currentIdx = 0;
+    state.currentFlowIndex = 0;
+    return startFlowPhase();
+  }
+  render();
+}
+function startFlowPhase() {
+  state.feedback = null;
+  state.selectedOption = null;
+  state.input = "";
+  state.hintShown = false;
+  state.phaseName = state.phasesFlow[state.currentFlowIndex] || "typing";
+  state.phase = state.phaseName === "choice" ? 2 : state.currentFlowIndex === state.phasesFlow.length - 1 ? 4 : 3;
+  state.screen = state.phaseName === "choice" ? "choice" : "typing";
+  if (state.phaseName === "choice") state.options = buildChoiceOptions(getCurrentIndex(), state.mode, state.queue);
+  render();
+  focusInput();
+}
+function getCurrentIndex() { return state.queue[state.currentIdx]; }
+function getCurrentPerson() { return PEOPLE[getCurrentIndex()]; }
+function addToQueue(idx, power = 1) {
+  const score = getPersonStat(idx).difficultScore || 0;
+  const repeatCount = Math.min(2, power + (score >= 6 ? 1 : 0));
+  for (let t=0; t<repeatCount; t++) {
+    const insertAt = Math.min(state.currentIdx + 2 + Math.floor(Math.random() * 3), state.queue.length);
+    state.queue.splice(insertAt, 0, idx);
+  }
+}
+function afterQuestionResolved() {
+  state.currentIdx += 1;
+  state.feedback = null;
+  state.selectedOption = null;
+  state.input = "";
+  state.hintShown = false;
+  if (state.currentIdx >= state.queue.length) {
+    state.currentFlowIndex += 1;
+    if (state.currentFlowIndex >= state.phasesFlow.length) return showResults();
+    state.queue = shuffle([...new Set(state.queue)]);
+    state.currentIdx = 0;
+    return startFlowPhase();
+  }
+  if (state.phaseName === "choice") state.options = buildChoiceOptions(getCurrentIndex(), state.mode, state.queue);
+  render();
+  focusInput();
+}
+function handleChoice(optionIdx) {
+  if (state.feedback) return;
+  const correctIdx = getCurrentIndex();
+  const correct = optionIdx === correctIdx;
+  state.selectedOption = optionIdx;
+  state.feedback = correct ? "correct" : "wrong";
+  if (correct) {
+    state.stats.correct += 1; state.streak += 1; profile.maxStreak = Math.max(profile.maxStreak || 0, state.streak); vibrate(8); recordOutcome(correctIdx, "correct", "choice");
+  } else {
+    state.stats.wrong += 1; state.streak = 0; addToQueue(correctIdx, 1); vibrate([35,20,35]); recordOutcome(correctIdx, "wrong", "choice");
+  }
+  safeSet(STORAGE_KEYS.profile, profile);
+  render();
+  setTimeout(afterQuestionResolved, correct ? 380 : 980);
+}
+function skipChoice() {
+  if (state.feedback) return;
+  const idx = getCurrentIndex();
+  state.feedback = "wrong";
+  state.stats.skipped += 1;
+  state.streak = 0;
+  addToQueue(idx, 1);
+  recordOutcome(idx, "skip", "choice");
+  vibrate([35,20,35]);
+  render();
+  setTimeout(afterQuestionResolved, 900);
+}
+function submitTyping() {
+  if (state.feedback) return afterQuestionResolved();
+  if (!state.input.trim()) return;
+  const idx = getCurrentIndex();
+  const challenge = currentChallenge(getCurrentPerson(), state.mode);
+  const correct = checkAnswer(state.input, challenge.answer);
+  state.feedback = correct ? "correct" : "wrong";
+  if (correct) {
+    state.stats.correct += 1; state.streak += 1; profile.maxStreak = Math.max(profile.maxStreak || 0, state.streak); vibrate(8); recordOutcome(idx, "correct", "typing");
+  } else {
+    state.stats.wrong += 1; state.streak = 0; addToQueue(idx, 1); vibrate([35,20,35]); recordOutcome(idx, "wrong", "typing");
+  }
+  safeSet(STORAGE_KEYS.profile, profile);
+  render();
+}
+function skipTyping() {
+  if (state.feedback) return;
+  const idx = getCurrentIndex();
+  state.feedback = "wrong";
+  state.stats.skipped += 1;
+  state.streak = 0;
+  addToQueue(idx, 1);
+  recordOutcome(idx, "skip", "typing");
+  vibrate([35,20,35]);
+  render();
+}
+function showHint() {
+  state.hintShown = true;
+  render();
+}
+function showResults() {
+  state.screen = "results";
+  const timeSpent = Date.now() - (state.startTime || Date.now());
+  state.lastResults = {
+    label: state.currentTrainingLabel,
+    mode: state.mode,
+    difficulty: state.difficulty,
+    groups: [...state.groups],
+    known: [...state.known],
+    toLearn: [...new Set(state.toLearn.length ? state.toLearn : state.queue)],
+    stats: { ...state.stats },
+    timeSpent
+  };
+  profile.sessionsCompleted += 1;
+  profile.totalStudyTime += timeSpent;
+  profile.savedRuns += 1;
+  safeSet(STORAGE_KEYS.profile, profile);
+  clearSession();
+  render();
+}
+function quickTrainSingle(idx) {
+  startTraining([idx], "Мини-тренировка");
+}
+function toggleFavoriteAndRefresh(idx) {
+  markFavorite(idx);
+  toast(isFavorite(idx) ? "Добавлено в избранное" : "Убрано из избранного");
+}
+function exportProgress() {
+  const payload = {
+    exportedAt: Date.now(),
+    version: APP_VERSION,
+    profile,
+    settings
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "delta-trainer-progress.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+function triggerImport() {
+  document.getElementById("import-input").click();
+}
+function importProgress(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (data.profile) profile = { ...defaultProfile, ...data.profile };
+      if (data.settings) settings = { ...defaultSettings, ...data.settings };
+      saveSettings();
+      safeSet(STORAGE_KEYS.profile, profile);
+      toast("Прогресс импортирован");
+      goMenu();
+    } catch (e) {
+      toast("Не удалось импортировать файл");
+    }
+    event.target.value = "";
+  };
+  reader.readAsText(file);
+}
+function focusInput() {
+  setTimeout(() => {
+    const input = document.getElementById("answer-input");
+    if (input) input.focus();
+  }, 60);
+}
+function renderHeader(text, streak = null) {
+  return `
+    <div class="topbar">
+      <button class="back-btn" onclick="goMenu()">←</button>
+      <div class="page-title">${text}</div>
+      ${streak && streak >= 3 ? `<div class="pill" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border:none;">🔥 ${streak}</div>` : `<button class="icon-btn" onclick="toggleTheme()">${settings.theme === "dark" ? "☀️" : "🌙"}</button>`}
+    </div>
+  `;
+}
+function renderPhaseDots(active) {
+  return `<div class="phase-dots">
+    <div class="phase-dot ${active > 1 ? "done" : active === 1 ? "active" : ""}"></div>
+    <div class="phase-dot ${active > 2 ? "done" : active === 2 ? "active" : ""}"></div>
+    <div class="phase-dot ${active > 3 ? "done" : active === 3 ? "active" : ""}"></div>
+    <div class="phase-dot ${active === 4 ? "active" : ""}"></div>
+  </div>`;
+}
+function renderFooter() {
+  return `<div class="footer"><span>Сделано с любовью для кандидатов и бойцов СПО «Дельта»</span></div>`;
+}
+function renderMenu() {
+  const session = loadSession();
+  const all = datasetIndexesByGroups(settings.groups);
+  const today = profile.todayMistakes[getTodayKey()] || {};
+  return `
+    <div class="hero">
+      <div class="logo-wrap"><img src="${LOGO_SRC}" alt="СПО Дельта"></div>
+      <h1>Тренажёр ФИО и должностей</h1>
+      <p>Удобная подготовка к сдаче устава: группы, карточки, ошибки, статистика, избранное и автосохранение прогресса на этом устройстве.</p>
+    </div>
+
+    <div class="grid-3">
+      <div class="stat-card"><div class="num" style="color:var(--good)">${PEOPLE.length}</div><div class="label">Карточек всего</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--accent)">${profile.sessionsCompleted || 0}</div><div class="label">Завершённых сессий</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--warn)">${profile.maxStreak || 0}</div><div class="label">Лучший стрик</div></div>
+    </div>
+
+    <div class="card filters">
+      <div>
+        <div class="section-title">Группы</div>
+        <div class="group-grid">
+          ${allGroups().map(group => `<button class="group-chip ${settings.groups.includes(group) ? "active" : ""}" onclick="toggleGroup('${escapeHtml(group)}')">${escapeHtml(group)}</button>`).join("")}
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Режим</div>
+        <div class="mode-selector">
+          <button class="mode-btn ${settings.mode === "name-to-position" ? "active" : ""}" onclick="setMode('name-to-position')">ФИО → должность</button>
+          <button class="mode-btn ${settings.mode === "position-to-name" ? "active" : ""}" onclick="setMode('position-to-name')">Должность → ФИО</button>
+          <button class="mode-btn" onclick="openFlashcards()">Карточки</button>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Сложность</div>
+        <div class="difficulty-selector">
+          <button class="difficulty-btn ${settings.difficulty === "easy" ? "active" : ""}" onclick="setDifficulty('easy')">Лёгкий</button>
+          <button class="difficulty-btn ${settings.difficulty === "medium" ? "active" : ""}" onclick="setDifficulty('medium')">Средний</button>
+          <button class="difficulty-btn ${settings.difficulty === "hard" ? "active" : ""}" onclick="setDifficulty('hard')">Сложный</button>
+        </div>
+      </div>
+      <div class="badge-row">
+        <span class="badge">В выборке сейчас: ${all.length}</span>
+        <span class="badge">Сегодня ошибок: ${Object.keys(today).length}</span>
+        <span class="badge">Избранное: ${Object.values(profile.favorites || {}).filter(Boolean).length}</span>
+      </div>
+    </div>
+
+    ${session ? `<button class="menu-btn primary" onclick="continueSession()"><div class="emoji">▶️</div><div><div class="title">Продолжить</div><div class="sub">Последняя сессия сохранена. Прогресс восстановится после закрытия и повторного открытия сайта на этом устройстве.</div></div></button>` : ""}
+
+    <button class="menu-btn primary" onclick="startTraining()"><div class="emoji">🚀</div><div><div class="title">Начать обучение</div><div class="sub">Фильтр знакомых → тренировка по уровню сложности → результат</div></div></button>
+    <div class="row">
+      <button class="menu-btn" onclick="startQuickPractice()"><div class="emoji">⚡</div><div><div class="title">Быстрая тренировка</div><div class="sub">10 случайных карточек по выбранным группам</div></div></button>
+      <button class="menu-btn" onclick="openFlashcards()"><div class="emoji">🃏</div><div><div class="title">Режим карточек</div><div class="sub">Спокойный просмотр без теста</div></div></button>
+    </div>
+    <div class="row">
+      <button class="menu-btn" onclick="startTodayMistakes()"><div class="emoji">🧯</div><div><div class="title">Ошибки за сегодня</div><div class="sub">Повторить карточки, где уже были ошибки</div></div></button>
+      <button class="menu-btn" onclick="startHardestTraining()"><div class="emoji">🎯</div><div><div class="title">Самые сложные</div><div class="sub">Карточки с самым высоким уровнем сложности</div></div></button>
+    </div>
+    <div class="row">
+      <button class="menu-btn" onclick="startFavoritesTraining()"><div class="emoji">⭐</div><div><div class="title">Избранное</div><div class="sub">Учить только отмеченные карточки</div></div></button>
+      <button class="menu-btn" onclick="openDirectory()"><div class="emoji">📚</div><div><div class="title">Весь список и поиск</div><div class="sub">Поиск + быстрый запуск мини-тренировки</div></div></button>
+    </div>
+    <div class="row">
+      <button class="menu-btn" onclick="openStats()"><div class="emoji">📊</div><div><div class="title">Статистика</div><div class="sub">Прогресс, точность и проблемные карточки</div></div></button>
+      <button class="menu-btn" onclick="openSettings()"><div class="emoji">⚙️</div><div><div class="title">Настройки</div><div class="sub">Тема, экспорт и импорт прогресса</div></div></button>
+    </div>
+  `;
+}
+function renderFilter() {
+  const idx = state.pool[state.currentIdx];
+  const person = PEOPLE[idx];
+  const challenge = currentChallenge(person, state.mode);
+  const progress = state.pool.length ? Math.round((state.currentIdx / state.pool.length) * 100) : 0;
+  return `
+    ${renderHeader(`${state.currentIdx + 1} / ${state.pool.length}`)}
+    ${renderPhaseDots(1)}
+    <div class="phase-label">Фаза 1: отмечаем знакомых</div>
+    <div class="progress"><div style="width:${progress}%"></div></div>
+    ${state.notice ? `<div class="notice">${escapeHtml(state.notice)}</div>` : ""}
+    <div class="card">
+      <div class="person-head">
+        ${avatarHtml(idx)}
+        <div class="person-head-main">
+          <div class="question-label">👤 ${escapeHtml(person.group)}</div>
+          <div class="question ${challenge.ask.length > 72 ? "small" : ""}">${escapeHtml(challenge.ask)}</div>
+          <div class="answer-preview">${escapeHtml(displayValueByMode(idx, state.mode))}</div>
+          ${hasDuplicatePosition(idx) ? `<div class="alias-line">Подсказка для одинаковых должностей: ${escapeHtml(surnameInitial(idx))}</div>` : ""}
+        </div>
+      </div>
+      <div class="badge-row" style="margin-top:12px;">
+        <span class="badge">Сложность: ${getPersonStat(idx).difficultScore || 0}</span>
+        <button class="group-chip ${isFavorite(idx) ? "active" : ""}" onclick="toggleFavoriteAndRefresh(${idx})">⭐ Избранное</button>
+      </div>
+      <div class="row" style="margin-top:16px;">
+        <button class="btn good" onclick="markKnown(true)">✅ Знаю</button>
+        <button class="btn bad" onclick="markKnown(false)">📌 Учить</button>
+        <button class="btn secondary" onclick="skipFilter()">⏭ Пропустить</button>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn secondary" onclick="reshuffleCurrent()">🔀 Перемешать заново</button>
+      </div>
+    </div>
+    <div class="stats-pills">
+      <span class="pill">Знаю: ${state.known.length}</span>
+      <span class="pill">Учить: ${state.toLearn.length}</span>
+      <span class="pill">Пропуски: ${state.stats.skipped}</span>
+    </div>
+  `;
+}
+
+function renderChoice() {
+  const idx = getCurrentIndex();
+  const person = PEOPLE[idx];
+  const challenge = currentChallenge(person, state.mode);
+  const progress = state.queue.length ? Math.round((state.currentIdx / state.queue.length) * 100) : 0;
+  return `
+    ${renderHeader(`${state.currentIdx + 1} / ${state.queue.length}`, state.streak)}
+    ${renderPhaseDots(2)}
+    <div class="phase-label">Фаза 2: быстрый выбор</div>
+    <div class="progress"><div style="width:${progress}%"></div></div>
+    <div class="card">
+      <div class="person-head">
+        ${avatarHtml(idx)}
+        <div class="person-head-main">
+          <div class="question-label">⚡ ${escapeHtml(person.group)}</div>
+          <div class="question ${askLabelWithMarker(idx, state.mode).length > 72 ? "small" : ""}">${escapeHtml(askLabelWithMarker(idx, state.mode))}</div>
+          ${state.mode === "position-to-name" && hasDuplicatePosition(idx) ? `<div class="alias-line">Нужный человек отмечен буквой фамилии: ${escapeHtml(surnameInitial(idx))}</div>` : ""}
+        </div>
+      </div>
+      <div class="options" style="margin-top:16px;">
+        ${state.options.map((optionIdx, optionNumber) => {
+          let cls = "option-btn";
+          if (state.feedback) {
+            if (optionIdx === idx) cls += " correct";
+            else if (optionIdx === state.selectedOption) cls += " wrong";
+          }
+          const optionText = displayValueByMode(optionIdx, state.mode);
+          return `<button class="${cls}" onclick="handleChoice(${optionIdx})"><span class="muted tiny">${optionNumber + 1}.</span><br>${escapeHtml(optionText)}</button>`;
+        }).join("")}
+      </div>
+      ${state.feedback === "wrong" ? `<div class="feedback"><div class="feedback-title bad">Неверно</div><div class="answer-preview">${escapeHtml(displayValueByMode(idx, state.mode))}</div></div>` : ""}
+      <div class="row" style="margin-top:14px;">
+        <button class="btn secondary" onclick="skipChoice()">⏭ Пропустить</button>
+        <button class="btn secondary" onclick="reshuffleCurrent()">🔀 Перемешать заново</button>
+      </div>
+      <div class="kbd-row"><span class="kbd">1-4</span><span class="kbd">S</span><span class="kbd">R</span><span class="muted tiny">цифры — варианты, S — пропуск, R — перемешать</span></div>
+    </div>
+    <div class="stats-pills">
+      <span class="pill">Верно: ${state.stats.correct}</span>
+      <span class="pill">Ошибки: ${state.stats.wrong}</span>
+      <span class="pill">Пропуски: ${state.stats.skipped}</span>
+    </div>
+  `;
+}
+
+function renderTyping() {
+  const idx = getCurrentIndex();
+  const person = PEOPLE[idx];
+  const challenge = currentChallenge(person, state.mode);
+  const isFinal = state.currentFlowIndex === state.phasesFlow.length - 1;
+  const progress = state.queue.length ? Math.round((state.currentIdx / state.queue.length) * 100) : 0;
+  const allowHint = settings.difficulty !== "hard";
+  return `
+    ${renderHeader(`${state.currentIdx + 1} / ${state.queue.length}`, state.streak)}
+    ${renderPhaseDots(isFinal ? 4 : 3)}
+    <div class="phase-label">${isFinal ? "Финальная проверка" : "Ввод ответа"}</div>
+    <div class="progress"><div style="width:${progress}%"></div></div>
+    <div class="card">
+      <div class="person-head">
+        ${avatarHtml(idx)}
+        <div class="person-head-main">
+          <div class="question-label">${isFinal ? "🏁 Итог" : "⌨️ Введи ответ"} • ${escapeHtml(person.group)}</div>
+          <div class="question ${askLabelWithMarker(idx, state.mode).length > 72 ? "small" : ""}">${escapeHtml(askLabelWithMarker(idx, state.mode))}</div>
+          ${(state.mode === "position-to-name" && hasDuplicatePosition(idx)) ? `<div class="alias-line">Ориентир: ${escapeHtml(surnameInitial(idx))}</div>` : ""}
+        </div>
+      </div>
+      <div class="badge-row" style="margin-top:12px;">
+        <button class="group-chip ${isFavorite(idx) ? "active" : ""}" onclick="toggleFavoriteAndRefresh(${idx})">⭐ Избранное</button>
+      </div>
+      ${!state.feedback ? `
+        <div style="margin-top:16px;"><input id="answer-input" class="input" type="text" placeholder="${state.mode === "name-to-position" ? "Введи должность..." : "Введи ФИО..."}" value="${escapeHtml(state.input)}" oninput="state.input=this.value" onkeydown="if(event.key==='Enter') submitTyping()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+        ${allowHint ? (state.hintShown ? `<div class="notice" style="margin-top:12px;">Подсказка: ${escapeHtml(answerHint(challenge.answer, state.mode))}</div>` : `<button class="group-chip" style="margin-top:12px;" onclick="showHint()">💡 Показать подсказку</button>`) : `<div class="notice" style="margin-top:12px;">Сложный уровень: подсказки отключены.</div>`}
+        <div class="row" style="margin-top:14px;">
+          <button class="btn primary" onclick="submitTyping()">Проверить</button>
+          <button class="btn secondary" onclick="skipTyping()">⏭ Пропустить</button>
+          <button class="btn secondary" onclick="reshuffleCurrent()">🔀 Перемешать заново</button>
+        </div>
+        <div class="kbd-row"><span class="kbd">Enter</span><span class="kbd">H</span><span class="kbd">S</span><span class="kbd">R</span><span class="muted tiny">Enter — проверить, H — подсказка, S — пропуск, R — перемешать</span></div>
+      ` : `
+        <input class="input ${state.feedback}" type="text" value="${escapeHtml(state.input)}" disabled>
+        <div class="feedback" style="margin-top:14px;">
+          ${state.feedback === "correct" ? `<div class="feedback-title good">Верно</div>` : `<div class="feedback-title bad">Неверно</div><div class="answer-preview">${escapeHtml(displayValueByMode(idx, state.mode))}</div>`}
+        </div>
+        <div class="row" style="margin-top:14px;"><button class="btn primary" onclick="submitTyping()">Дальше</button></div>
+        <div class="kbd-row"><span class="kbd">Enter</span><span class="muted tiny">нажми Enter, чтобы перейти дальше</span></div>
+      `}
+    </div>
+    <div class="stats-pills">
+      <span class="pill">Верно: ${state.stats.correct}</span>
+      <span class="pill">Ошибки: ${state.stats.wrong}</span>
+      <span class="pill">Пропуски: ${state.stats.skipped}</span>
+    </div>
+  `;
+}
+
+function renderFlashcards() {
+  const idx = state.flashIndexes[state.flashCurrent];
+  const person = PEOPLE[idx];
+  const showingBack = state.flashFlipped;
+  return `
+    ${renderHeader(`Карточка ${state.flashCurrent + 1} / ${state.flashIndexes.length}`)}
+    <div class="card">
+      <div class="question-label">🃏 ${escapeHtml(state.currentTrainingLabel)}</div>
+      <div class="person-head">
+        ${avatarHtml(idx)}
+        <div class="person-head-main">
+          <div class="question-label">${showingBack ? "Должность" : "ФИО"}</div>
+          <div class="question ${showingBack ? "small" : ""}">${escapeHtml(showingBack ? positionWithMarker(idx) : person.name)}</div>
+          <div class="list-group">${escapeHtml(person.group)}</div>
+          ${showingBack && hasDuplicatePosition(idx) ? `<div class="alias-line">Метка для одинаковых должностей: ${escapeHtml(surnameInitial(idx))}</div>` : ""}
+        </div>
+      </div>
+      <div class="row" style="margin-top:16px;">
+        <button class="btn secondary" onclick="flashPrev()">← Назад</button>
+        <button class="btn primary" onclick="state.flashFlipped=!state.flashFlipped; render()">🔄 ${showingBack ? "Показать ФИО" : "Показать должность"}</button>
+        <button class="btn secondary" onclick="flashNext()">Вперёд →</button>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn secondary" onclick="quickTrainSingle(${idx})">🎯 Учить этого человека</button>
+        <button class="btn secondary" onclick="toggleFavoriteAndRefresh(${idx})">⭐ ${isFavorite(idx) ? "Убрать из избранного" : "В избранное"}</button>
+      </div>
+      <div class="kbd-row"><span class="kbd">Space</span><span class="kbd">←</span><span class="kbd">→</span><span class="muted tiny">Space — переворот, стрелки — листать</span></div>
+    </div>
+  `;
+}
+
+function flashPrev() {
+  if (!state.flashIndexes.length) return;
+  state.flashCurrent = (state.flashCurrent - 1 + state.flashIndexes.length) % state.flashIndexes.length;
+  state.flashFlipped = false;
+  render();
+}
+function flashNext() {
+  if (!state.flashIndexes.length) return;
+  state.flashCurrent = (state.flashCurrent + 1) % state.flashIndexes.length;
+  state.flashFlipped = false;
+  render();
+}
+function renderDirectory() {
+  const q = normalizeText(state.search);
+  const filtered = PEOPLE.map((p,i)=>({...p, idx:i})).filter(item => {
+    if (!settings.groups.includes(item.group)) return false;
+    return !q || normalizeText(item.name + " " + item.position + " " + item.group + " " + getSurname(item.name)).includes(q);
+  });
+  return `
+    ${renderHeader(`Список • ${filtered.length} / ${PEOPLE.length}`)}
+    <div class="search-wrap">
+      <div class="card">
+        <div class="section-title">Поиск</div>
+        ${searchInputHtml()}
+      </div>
+      <div class="directory-list">
+        ${filtered.length ? filtered.map(item => `
+          <div class="list-item">
+            <div class="list-top">
+              <div class="person-head" style="flex:1; align-items:flex-start;">
+                ${avatarHtml(item.idx, "small")}
+                <div style="flex:1;min-width:0;">
+                  <div class="list-name">${escapeHtml(item.name)}</div>
+                  <div class="list-position">${escapeHtml(positionWithMarker(item.idx))}</div>
+                  <div class="list-group">${escapeHtml(item.group)}</div>
+                </div>
+              </div>
+              <button class="star-btn" onclick="toggleFavoriteAndRefresh(${item.idx})">${isFavorite(item.idx) ? "★" : "☆"}</button>
+            </div>
+            <div class="row" style="margin-top:12px;">
+              <button class="btn secondary" onclick="quickTrainSingle(${item.idx})">Учить этого человека</button>
+            </div>
+          </div>
+        `).join("") : `<div class="card"><div class="muted">Ничего не найдено.</div></div>`}
+      </div>
+    </div>
+  `;
+}
+
+function renderStats() {
+  const entries = PEOPLE.map((p, idx) => {
+    const st = getPersonStat(idx);
+    const attempts = st.correct + st.wrong + st.skipped;
+    const accuracy = attempts ? Math.round((st.correct / attempts) * 100) : 0;
+    return { idx, name: p.name, position: p.position, group: p.group, ...st, attempts, accuracy };
+  }).sort((a,b) => (b.difficultScore||0) - (a.difficultScore||0) || (b.wrong||0)-(a.wrong||0)).slice(0, 12);
+  const attempts = profile.totalCorrect + profile.totalWrong + profile.totalSkipped;
+  const acc = attempts ? Math.round((profile.totalCorrect / attempts) * 100) : 0;
+  return `
+    ${renderHeader("Статистика")}
+    <div class="grid-3">
+      <div class="stat-card"><div class="num" style="color:var(--accent)">${attempts}</div><div class="label">Ответов всего</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--good)">${acc}%</div><div class="label">Точность</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--warn)">${formatTime(profile.totalStudyTime || 0)}</div><div class="label">Время в приложении</div></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Общий прогресс</div>
+      <div class="stats-pills">
+        <span class="pill">Правильно: ${profile.totalCorrect}</span>
+        <span class="pill">Ошибки: ${profile.totalWrong}</span>
+        <span class="pill">Пропуски: ${profile.totalSkipped}</span>
+        <span class="pill">Сайт открыт: ${profile.siteOpenCount}</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Кто вызывает больше всего проблем</div>
+      <div class="stats-list">
+        ${entries.map(item => `
+          <div class="list-item">
+            <div class="list-name">${escapeHtml(item.name)}</div>
+            <div class="list-position">${escapeHtml(item.position)}</div>
+            <div class="stats-pills" style="margin-top:10px;">
+              <span class="pill">Группа: ${escapeHtml(item.group)}</span>
+              <span class="pill">Сложность: ${item.difficultScore || 0}</span>
+              <span class="pill">Ошибки: ${item.wrong || 0}</span>
+              <span class="pill">Точность: ${item.accuracy}%</span>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+function renderSettings() {
+  const examplePhoto = 'assets/people/kiselev-mihail-sergeevich.png';
+  return `
+    ${renderHeader("Настройки")}
+    <div class="settings-grid">
+      <div class="card">
+        <div class="section-title">Оформление</div>
+        <div class="row">
+          <button class="btn ${settings.theme === "dark" ? "primary" : "secondary"}" onclick="settings.theme='dark'; saveSettings(); render()">🌙 Тёмная</button>
+          <button class="btn ${settings.theme === "light" ? "primary" : "secondary"}" onclick="settings.theme='light'; saveSettings(); render()">☀️ Светлая</button>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn ${settings.showAvatars ? "primary" : "secondary"}" onclick="settings.showAvatars=!settings.showAvatars; saveSettings(); render()">🖼 ${settings.showAvatars ? "Аватары включены" : "Аватары выключены"}</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Прогресс</div>
+        <div class="row">
+          <button class="btn secondary" onclick="exportProgress()">⬇️ Экспорт</button>
+          <button class="btn secondary" onclick="triggerImport()">⬆️ Импорт</button>
+        </div>
+        <input id="import-input" type="file" accept="application/json" class="hidden" onchange="importProgress(event)">
+        <div class="notice" style="margin-top:12px;">Прогресс сохраняется на этом устройстве автоматически и восстанавливается после закрытия и повторного открытия сайта.</div>
+      </div>
+      
+      <div class="card">
+        <div class="section-title">Горячие клавиши на ПК</div>
+        <div class="kbd-row"><span class="kbd">Enter</span><span class="kbd">1-4</span><span class="kbd">S</span><span class="kbd">H</span><span class="kbd">R</span><span class="kbd">Space</span><span class="kbd">←</span><span class="kbd">→</span></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Сброс</div>
+        <div class="row">
+          <button class="btn bad" onclick="if(confirm('Сбросить весь локальный прогресс?')){ profile={...defaultProfile,siteOpenCount:profile.siteOpenCount}; safeSet(STORAGE_KEYS.profile, profile); safeRemove(STORAGE_KEYS.session); toast('Прогресс сброшен'); goMenu(); }">Сбросить прогресс</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderResults() {
+  const result = state.lastResults || { known:[], toLearn:[], stats:{correct:0,wrong:0,skipped:0}, timeSpent:0 };
+  const total = result.stats.correct + result.stats.wrong + result.stats.skipped;
+  const acc = total ? Math.round((result.stats.correct / total) * 100) : 100;
+  const mood = acc >= 85 ? ["🏆","Отличный результат"] : acc >= 60 ? ["👍","Неплохо"] : ["📌","Нужно повторить"];
+  const mistakes = Object.keys(profile.todayMistakes[getTodayKey()] || {}).map(Number);
+  return `
+    <div class="card">
+      <div class="feedback">
+        <div style="font-size:72px; margin-bottom:10px;">${mood[0]}</div>
+        <div class="feedback-title">${mood[1]}</div>
+        <div class="muted">${escapeHtml(result.label || "Тренировка")}</div>
+      </div>
+      <div class="grid-3" style="margin-top:18px;">
+        <div class="stat-card"><div class="num" style="color:var(--good)">${result.stats.correct}</div><div class="label">Верно</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--bad)">${result.stats.wrong}</div><div class="label">Ошибки</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--warn)">${acc}%</div><div class="label">Точность</div></div>
+      </div>
+      <div class="stats-pills" style="margin-top:14px;">
+        <span class="pill">Пропуски: ${result.stats.skipped}</span>
+        <span class="pill">Время: ${formatTime(result.timeSpent)}</span>
+        <span class="pill">Режим: ${result.mode === "name-to-position" ? "ФИО → должность" : "Должность → ФИО"}</span>
+        <span class="pill">Сложность: ${result.difficulty === "easy" ? "лёгкий" : result.difficulty === "medium" ? "средний" : "сложный"}</span>
+      </div>
+      <div class="row" style="margin-top:18px;">
+        <button class="btn primary" onclick="startTraining()">Ещё раз</button>
+        <button class="btn secondary" onclick="startTodayMistakes()">Ошибки за сегодня</button>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn secondary" onclick="openStats()">Открыть статистику</button>
+        <button class="btn secondary" onclick="goMenu()">На главную</button>
+      </div>
+    </div>
+  `;
+}
+function render() {
+  const root = document.getElementById("app");
+  let html = "";
+  if (state.screen === "menu") html = renderMenu();
+  else if (state.screen === "filter") html = renderFilter();
+  else if (state.screen === "choice") html = renderChoice();
+  else if (state.screen === "typing") html = renderTyping();
+  else if (state.screen === "flashcards") html = renderFlashcards();
+  else if (state.screen === "directory") html = renderDirectory();
+  else if (state.screen === "stats") html = renderStats();
+  else if (state.screen === "settings") html = renderSettings();
+  else if (state.screen === "results") html = renderResults();
+  root.innerHTML = html + renderFooter();
+  saveSession();
+  if (state.screen === "directory") {
+    const search = document.getElementById("directory-search");
+    if (search) {
+      const pos = Number.isInteger(state.searchCursor) ? state.searchCursor : state.search.length;
+      setTimeout(() => { search.focus(); search.setSelectionRange(pos, pos); }, 0);
+    }
+  }
+}
+
+document.addEventListener("keydown", (event) => {
+  const modal = document.getElementById("photo-modal");
+  if (modal && !modal.classList.contains("hidden")) {
+    if (["Escape","Enter"," "].includes(event.key)) { event.preventDefault(); closePhotoModal(); }
+    return;
+  }
+  const tag = (document.activeElement && document.activeElement.tagName || "").toLowerCase();
+  const typingInputFocused = tag === "input" || tag === "textarea";
+  if (state.screen === "typing") {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      submitTyping();
+      return;
+    }
+    if (!typingInputFocused && event.key.toLowerCase() === "h" && !state.feedback && settings.difficulty !== "hard") {
+      event.preventDefault(); showHint(); return;
+    }
+    if (!typingInputFocused && event.key.toLowerCase() === "s" && !state.feedback) {
+      event.preventDefault(); skipTyping(); return;
+    }
+    if (!typingInputFocused && event.key.toLowerCase() === "r") {
+      event.preventDefault(); reshuffleCurrent(); return;
+    }
+  }
+  if (state.screen === "choice") {
+    if (["1","2","3","4"].includes(event.key) && !state.feedback) {
+      const idx = Number(event.key) - 1;
+      if (state.options[idx] !== undefined) { event.preventDefault(); handleChoice(state.options[idx]); return; }
+    }
+    if (event.key.toLowerCase() === "s" && !state.feedback) { event.preventDefault(); skipChoice(); return; }
+    if (event.key.toLowerCase() === "r") { event.preventDefault(); reshuffleCurrent(); return; }
+  }
+  if (state.screen === "flashcards") {
+    if (event.key === " ") { event.preventDefault(); state.flashFlipped = !state.flashFlipped; render(); return; }
+    if (event.key === "ArrowLeft") { event.preventDefault(); flashPrev(); return; }
+    if (event.key === "ArrowRight") { event.preventDefault(); flashNext(); return; }
+    if (event.key === "Enter") { event.preventDefault(); state.flashFlipped = !state.flashFlipped; render(); return; }
+  }
+});
+(function init() {
+  const saved = loadSession();
+  if (saved && saved.screen && saved.screen !== "menu") state = saved;
+  render();
+})();
+</script>
+</body>
+</html>
